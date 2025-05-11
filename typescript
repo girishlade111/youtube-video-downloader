@@ -1,0 +1,38 @@
+// src/main.ts
+const form = document.getElementById('url-form') as HTMLFormElement;
+const resultsSection = document.getElementById('results-section');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const urlInput = document.getElementById('url') as HTMLInputElement;
+  const url = urlInput.value.trim();
+  
+  if (!validateYouTubeUrl(url)) {
+    showAlert('Invalid YouTube URL', 'error');
+    return;
+  }
+
+  showLoading();
+  
+  try {
+    const response = await fetch('/api/process-video', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: extractVideoId(url) })
+    });
+    
+    const data = await response.json();
+    displayVideoInfo(data);
+  } catch (error) {
+    showAlert('Error fetching video info', 'error');
+  }
+});
+
+function validateYouTubeUrl(url: string): boolean {
+  const regex = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/;
+  return regex.test(url);
+}
+
+function extractVideoId(url: string): string {
+  return url.match(/(?:v=|\/)([\w-]{11})/)[1];
+}
