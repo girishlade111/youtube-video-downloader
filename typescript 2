@@ -1,0 +1,13 @@
+function createFormatSelector(formats: any[]): HTMLSelectElement {
+  const select = document.createElement('select');
+  select.className = 'p-2 border rounded w-full';
+  
+  formats.forEach(format => {
+    const option = document.createElement('option');
+    option.value = format.url;
+    option.textContent = `${format.quality} ${format.ext.toUpperCase()} (${format.size})`;
+    select.appendChild(option);
+  });
+  
+  return select;
+}
