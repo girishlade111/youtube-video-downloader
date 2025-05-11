@@ -1,0 +1,6 @@
+# Add to ydl_opts for audio extraction
+'postprocessors': [{
+    'key': 'FFmpegExtractAudio',
+    'preferredcodec': 'mp3',
+    'preferredquality': '192',
+}]
