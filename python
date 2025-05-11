@@ -1,0 +1,48 @@
+# backend/main.py
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from yt_dlp import YoutubeDL
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["POST"],
+    allow_headers=["*"]
+)
+
+@app.post("/api/process-video")
+async def process_video(url: str):
+    try:
+        ydl_opts = {
+            'quiet': True,
+            'skip_download': True,
+            'forcejson': True,
+        }
+        
+        with YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            
+            if info.get('age_limit') and info['age_limit'] > 18:
+                raise HTTPException(400, "Age-restricted content")
+            
+            formats = sorted([
+                {
+                    "quality": f"{f.get('height', '')}p",
+                    "ext": f.get('ext'),
+                    "size": f"{round(f.get('filesize', 0) / 1e6, 1)}MB",
+                    "url": f.get('url')
+                } for f in info['formats'] 
+                if f.get('vcodec') != 'none' and f.get('filesize')
+            ], key=lambda x: int(x['quality'].replace('p', '')), reverse=True)
+            
+            return {
+                "title": info['title'],
+                "thumbnail": info['thumbnail'],
+                "duration": info.get('duration_string'),
+                "formats": formats
+            }
+            
+    except Exception as e:
+        raise HTTPException(400, f"Error processing video: {str(e)}")
