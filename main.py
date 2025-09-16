@@ -24,7 +24,7 @@ async def process_video(url: str):
         with YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
             
-            if info.get('age_limit') and info['age_limit'] > 18:
+            if info.get('age_limit', 0) > 0:
                 raise HTTPException(400, "Age-restricted content")
             
             formats = sorted([
@@ -44,5 +44,7 @@ async def process_video(url: str):
                 "formats": formats
             }
             
+    except HTTPException as e:
+        raise e
     except Exception as e:
         raise HTTPException(400, f"Error processing video: {str(e)}")
